@@ -9,17 +9,8 @@
 
 include "mlir/Pass/PassBase.td"
 
-// def AffineLoopPermute : InterfacePass<"affine-to-gpu","FunctionOpInterface">{
-//   let summary = "Optimize affine loops for GPU";
-//   let constructor = "mlir::scalehls::createAffineLoopPermutePass()";
-//   let dependentDialects = ["gpu::GPUDialect"];
-// }
 
-def AffineLoopPermute : Pass<"affine-to-gpu","func::FuncOp">{
-  let summary = "Optimize affine loops for GPU";
-  let constructor = "mlir::scalehls::createAffineLoopPermutePass()";
-  // let dependentDialects = ["gpu::GPUDialect"];
-}
+
 
 def DesignSpaceExplore : Pass<"scalehls-dse", "ModuleOp"> {
   let summary = "Optimize HLS design at multiple abstraction level";
@@ -59,6 +50,22 @@ def FuncPreprocess : Pass<"scalehls-func-preprocess", "func::FuncOp"> {
     Option<"topFunc", "top-func", "std::string", /*default=*/"\"main\"",
            "The top function for HLS synthesis">
   ];
+}
+
+//===----------------------------------------------------------------------===//
+// ScaleCUDA-related Passes
+//===----------------------------------------------------------------------===//
+
+def AffineLoopPermute : Pass<"affine-to-gpu","func::FuncOp">{
+  let summary = "Optimize affine loops for GPU";
+  let constructor = "mlir::scalehls::createAffineLoopPermutePass()";
+  // let dependentDialects = ["gpu::GPUDialect"];
+}
+
+def AffineToMemref : Pass<"affine-to-memref", "func::FuncOp"> {
+  let summary = "Convert Affine memory refferences to Memref";
+  let constructor = "mlir::scalehls::createAffineToMemrefPass()";
+  let dependentDialects = ["AffineDialect", "memref::MemRefDialect"];
 }
 
 //===----------------------------------------------------------------------===//

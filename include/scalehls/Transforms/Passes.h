@@ -38,14 +38,16 @@ void addCreateSubviewPasses(OpPassManager &pm,
 void addSimplifyCopyPasses(OpPassManager &pm);
 void addSimplifyAffineLoopPasses(OpPassManager &pm);
 
-// std::unique_ptr<InterfacePass<FunctionOpInterface>> createAffineLoopPermutePass();
-std::unique_ptr<Pass> createAffineLoopPermutePass();
 
 std::unique_ptr<Pass>
 createDesignSpaceExplorePass(std::string dseTargetSpec = "");
 std::unique_ptr<Pass> createFuncDuplicationPass();
 std::unique_ptr<Pass>
 createFuncPreprocessPass(std::string hlsTopFunc = "forward");
+
+// ScaleCUDA
+std::unique_ptr<Pass> createAffineToMemrefPass();
+std::unique_ptr<Pass> createAffineLoopPermutePass();
 
 /// Dataflow-related passes.
 std::unique_ptr<Pass> createBalanceDataflowNodePass();

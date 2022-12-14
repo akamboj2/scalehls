@@ -7,7 +7,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "scalehls/Transforms/Passes.h"
 #include "scalehls/Transforms/Utils.h"
-
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 using namespace mlir;
 using namespace scalehls;
 using namespace hls;
@@ -42,18 +42,18 @@ struct CreateLocalBuffer
       // local buffer's memref type.
       auto bufType = MemRefType::get(
           subview.getType().getShape(), subview.getType().getElementType(),
-          AffineMap(), (unsigned)MemoryKind::BRAM_T2P);
+          AffineMap());
 
       // Allocate an on-chip buffer and replace all its uses.
       auto loc = builder.getUnknownLoc();
       builder.setInsertionPointAfter(subview);
-      auto buf = builder.create<BufferOp>(loc, bufType);
+      auto buf = builder.create<memref::AllocOp>(loc, bufType);
       subview.getResult().replaceAllUsesWith(buf);
 
       // If the global buffer has initial value, set it to the local buffer.
-      auto globalBuf = findBufferOp(subview.getSource());
-      if (globalBuf && globalBuf.getBufferInitValue())
-        buf.setInitValueAttr(globalBuf.getBufferInitValue().value());
+      // auto globalBuf = findBufferOp(subview.getSource());
+      // if (globalBuf && globalBuf.getBufferInitValue())
+      //   buf.setInitValueAttr(globalBuf.getBufferInitValue().value());
 
       // Create explicit copy from/to the local buffer.
       if (readFlag)
