@@ -24,6 +24,7 @@ add_mlir_library(MLIRScaleHLSTransforms
   Directive/QoREstimation.cpp
 
   Loop/AffineLoopFusion.cpp
+  Loop/AffineLoopGPU.cpp
   Loop/AffineLoopOrderOpt.cpp
   Loop/AffineLoopPerfection.cpp
   Loop/AffineLoopTile.cpp

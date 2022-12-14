@@ -37,6 +37,8 @@ void addCreateSubviewPasses(OpPassManager &pm,
 void addSimplifyCopyPasses(OpPassManager &pm);
 void addSimplifyAffineLoopPasses(OpPassManager &pm);
 
+std::unique_ptr<InterfacePass<FunctionOpInterface>> createAffineLoopPermutePass();
+
 std::unique_ptr<Pass>
 createDesignSpaceExplorePass(std::string dseTargetSpec = "");
 std::unique_ptr<Pass> createFuncDuplicationPass();

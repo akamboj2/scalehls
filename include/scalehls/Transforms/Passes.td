@@ -9,6 +9,12 @@
 
 include "mlir/Pass/PassBase.td"
 
+def AffineLoopPermute : InterfacePass<"affine-to-gpu","FunctionOpInterface">{
+  let summary = "Optimize affine loops for GPU";
+  let constructor = "mlir::scaleHLS::createAffineLoopPermutePass()";
+  let dependentDialects = ["gpu::GPUDialect"]
+}
+
 def DesignSpaceExplore : Pass<"scalehls-dse", "ModuleOp"> {
   let summary = "Optimize HLS design at multiple abstraction level";
   let description = [{
