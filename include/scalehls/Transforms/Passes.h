@@ -31,13 +31,15 @@ void registerScaleFlowPyTorchPipeline();
 void registerScaleFlowPyTorchPipelinePost();
 void registerScaleFlowCppPipeline();
 void registerTransformsPasses();
+void registerScaleCUDAPipeline();
 
 void addCreateSubviewPasses(OpPassManager &pm,
                             CreateSubviewMode mode = CreateSubviewMode::Point);
 void addSimplifyCopyPasses(OpPassManager &pm);
 void addSimplifyAffineLoopPasses(OpPassManager &pm);
 
-std::unique_ptr<InterfacePass<FunctionOpInterface>> createAffineLoopPermutePass();
+// std::unique_ptr<InterfacePass<FunctionOpInterface>> createAffineLoopPermutePass();
+std::unique_ptr<Pass> createAffineLoopPermutePass();
 
 std::unique_ptr<Pass>
 createDesignSpaceExplorePass(std::string dseTargetSpec = "");

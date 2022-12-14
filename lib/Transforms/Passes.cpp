@@ -477,5 +477,6 @@ void scalehls::registerTransformsPasses() {
   registerScaleFlowPyTorchPipeline();
   registerScaleFlowPyTorchPipelinePost();
   registerScaleFlowCppPipeline();
+  registerScaleCUDAPipeline();
   registerPasses();
 }
