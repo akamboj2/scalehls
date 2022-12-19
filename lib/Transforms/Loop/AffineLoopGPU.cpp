@@ -37,6 +37,7 @@
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/MemRef/Transforms/Passes.h"
 
+#include "mlir/Dialect/GPU/Transforms/Passes.h"
 
 using namespace mlir;
 using namespace mlir::scf;
@@ -176,9 +177,12 @@ namespace{
 void mlir::scalehls::registerScaleCUDAPipeline() {
     mlir::PassPipelineRegistration<ScaleCUDAPipelineOptions>(
     "scalecuda-pipeline", "Optimize Affine on the GPU dialect", [](OpPassManager &pm, const ScaleCUDAPipelineOptions &opts) {
+    
     // Affine loop tiling.
     // pm.addPass(scalehls::createFuncPreprocessPass(opts.hlsTopFunc));
       pm.addPass(bufferization::createBufferLoopHoistingPass());
+      // pm.addPass(scalehls::createMaterializeReductionPass()); //note the following two were in attempt to make conv work
+      // scalehls::addSimplifyAffineLoopPasses(pm); 
       pm.addPass(scalehls::createAffineLoopPerfectionPass());
       pm.addPass(scalehls::createAffineLoopOrderOptPass());
       pm.addPass(scalehls::createAffineLoopTilePass(32));
@@ -187,7 +191,7 @@ void mlir::scalehls::registerScaleCUDAPipeline() {
 
       pm.addPass(scalehls::createAffineLoopPermutePass());
 
-      // // Local buffer allocation.
+      // // // Local buffer allocation.
       scalehls::addCreateSubviewPasses(pm);
       pm.addPass(scalehls::createCreateLocalBufferPass(false));
       pm.addPass(scalehls::createLowerCopyToAffinePass());
@@ -197,8 +201,49 @@ void mlir::scalehls::registerScaleCUDAPipeline() {
 
 
       pm.addPass(scalehls::createAffineToMemrefPass());
-      pm.addNestedPass<func::FuncOp>(mlir::createAffineForToGPUPass(2,2));
+      pm.addNestedPass<func::FuncOp>(mlir::createAffineForToGPUPass(0,2));
+
+      pm.addPass(mlir::createLowerAffinePass());
+      pm.addPass(mlir::createConvertSCFToCFPass());
+      pm.addPass(mlir::cf::createConvertControlFlowToLLVMPass());
+      pm.addPass(mlir::createReconcileUnrealizedCastsPass()); //AK: https://discourse.llvm.org/t/how-to-convert-affine-dialect-llvm-ir/4710
+      pm.addPass(mlir::createConvertIndexToLLVMPass());
+      pm.addPass(mlir::createReconcileUnrealizedCastsPass()); //AK: https://discourse.llvm.org/t/how-to-convert-affine-dialect-llvm-ir/4710
+      pm.addPass(mlir::createArithToLLVMConversionPass());
+      pm.addPass(mlir::createReconcileUnrealizedCastsPass()); //AK: https://discourse.llvm.org/t/how-to-convert-affine-dialect-llvm-ir/4710
+      pm.addPass(mlir::createMemRefToLLVMConversionPass());
+      pm.addPass(mlir::createCanonicalizerPass());
       
+      //for gpu exectuion
+      pm.addPass(mlir::createGpuKernelOutliningPass());
+      pm.addNestedPass<gpu::GPUModuleOp>(mlir::createStripDebugInfoPass());
+      pm.addNestedPass<gpu::GPUModuleOp>(mlir::createLowerGpuOpsToNVVMOpsPass());
+      pm.addNestedPass<gpu::GPUModuleOp>(mlir::createGpuSerializeToCubinPass("nvptx64-nvidia-cuda","sm_35","+ptx60"));       // (StringRef triple, StringRef chip, StringRef features)
+      pm.addPass(mlir::createGpuAsyncRegionPass());
+      pm.addPass(mlir::createGpuToLLVMConversionPass());    
     });
 }
 
+/*
+Get Any kernels running on a GPU:
+- compare it functionally to make sure it's working
+- get timing from GPU
+
+Local Buffer: 
+- we want the local buffer to be allocated in shared memory
+- see how it is percieved in the next steps
+- is there a way to make it shared memory if that's not what it is already.
+- Establish pipeline: GPU-NVVM-GPUBinary
+
+Get Convolution to Working
+
+Install CUBLAS 
+- linear algebra inputs, do a matmul or something
+- maybe try with Pytorch working 
+
+
+what is working:
+Running unoptimized MLIR on GPU on (dir is scalehls): /home/abhi/courses/ece527-SOC-Design/final_project/buddy-mlir/llvm/build/bin/mlir-cpu-runner  test_unoptimized.mlir -entry-point-result=void -shared-libs=/home/abhi/courses/ece527-SOC-Design/final_project/buddy-mlir/llvm/build/lib/libmlir_runner_utils.so -shared-libs=/home/abhi/courses/ece527-SOC-Design/final_project/buddy-mlir/llvm/build/lib/libmlir_cuda_runtime.so
+Running their version of matrix multiplication in buddy mlir: make gpu-mma-run in buddymlir/examples/mlirgpu directory
+
+*/

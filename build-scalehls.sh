@@ -42,7 +42,7 @@ if [ ! -f "CMakeCache.txt" ]; then
     -DLLVM_ENABLE_PROJECTS="mlir;clang" \
     -DLLVM_EXTERNAL_PROJECTS="scalehls" \
     -DLLVM_EXTERNAL_SCALEHLS_SOURCE_DIR="${SCALEHLS_DIR}" \
-    -DLLVM_TARGETS_TO_BUILD="host" \
+    -DLLVM_TARGETS_TO_BUILD="host;NVPTX" \
     -DLLVM_ENABLE_ASSERTIONS=ON \
     -DCMAKE_BUILD_TYPE=DEBUG \
     -DMLIR_ENABLE_BINDINGS_PYTHON="${PYBIND:=OFF}" \
@@ -50,7 +50,9 @@ if [ ! -f "CMakeCache.txt" ]; then
     -DLLVM_PARALLEL_LINK_JOBS="${JOBS:=}" \
     -DLLVM_USE_LINKER=lld \
     -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DMLIR_ENABLE_CUDA_RUNNER=ON      # -DLLVM_TARGETS_TO_BUILD="host;RISCV;NVPTX" \
+
 fi
 
 # Run building.
@@ -79,7 +81,9 @@ if [ ! -f "CMakeCache.txt" ]; then
     -DCMAKE_BUILD_TYPE=DEBUG \
     -DLLVM_USE_LINKER=lld \
     -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DLLVM_TARGETS_TO_BUILD="host;NVPTX" \
+    -DMLIR_ENABLE_CUDA_RUNNER=ON 
 fi
 
 # Run building.
